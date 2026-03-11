@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, createContext, useContext, ReactNode, useRef } from "react";
+import { useState, useEffect, createContext, useContext, ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -29,18 +29,11 @@ import {
   Award,
   ExternalLink,
   ArrowRight,
-  Camera,
-  User,
-  Lock,
-  LogIn,
-  LogOut,
-  Edit3,
-  Save,
-  XCircle,
+  Linkedin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 // Translation object
@@ -107,6 +100,41 @@ const translations = {
         },
       ],
       subscribe: "اشترك الآن",
+    },
+    ceo: {
+      title: "قيادة الرؤية",
+      subtitle: "المؤسس والمدير التنفيذي",
+      name: "كينغ اريوس",
+      role: "المدير التنفيذي",
+      description: "رؤية استثنائية وقيادة متميزة. كينغ اريوس هو المؤسس والمدير التنفيذي لإنفينيتي سيجنالز، يحمل أكثر من 15 عاماً من الخبرة في الأسواق المالية والتحليل التقني.",
+      experience: "+15 عاماً خبرة",
+      founded: "تأسست 2018",
+    },
+    team: {
+      title: "فريقنا",
+      subtitle: "خبراء متميزون في مجالاتهم",
+      members: [
+        {
+          name: "جيريمي",
+          role: "مدير التطوير",
+          description: "خبير في تطوير الأنظمة التقنية وتطبيقات التداول المتقدمة",
+        },
+        {
+          name: "ريان",
+          role: "محلل مالي",
+          description: "متخصص في تحليل الأسواق المالية وتقديم توصيات دقيقة",
+        },
+        {
+          name: "ميلانو",
+          role: "مديرة التسويق",
+          description: "خبيرة في استراتيجيات التسويق الرقمي وتوسيع قاعدة العملاء",
+        },
+        {
+          name: "سميحة",
+          role: "مديرة نجاح العملاء",
+          description: "ملتزمة بتقديم تجربة عملاء استثنائية ودعم متميز",
+        },
+      ],
     },
     features: {
       title: "لماذا تختارنا؟",
@@ -250,6 +278,41 @@ const translations = {
       ],
       subscribe: "Subscribe Now",
     },
+    ceo: {
+      title: "Leadership Vision",
+      subtitle: "Founder & CEO",
+      name: "King Arios",
+      role: "CEO & Founder",
+      description: "Exceptional vision and distinguished leadership. King Arios is the founder and CEO of Infinity Signals, bringing over 15 years of experience in financial markets and technical analysis.",
+      experience: "+15 Years Experience",
+      founded: "Founded 2018",
+    },
+    team: {
+      title: "Our Team",
+      subtitle: "Distinguished experts in their fields",
+      members: [
+        {
+          name: "Jeremy",
+          role: "Development Lead",
+          description: "Expert in developing technical systems and advanced trading applications",
+        },
+        {
+          name: "Ryan",
+          role: "Financial Analyst",
+          description: "Specialized in financial market analysis and providing accurate recommendations",
+        },
+        {
+          name: "Milano",
+          role: "Marketing Director",
+          description: "Expert in digital marketing strategies and customer base expansion",
+        },
+        {
+          name: "Samiha",
+          role: "Customer Success Manager",
+          description: "Committed to delivering exceptional customer experience and outstanding support",
+        },
+      ],
+    },
     features: {
       title: "Why Choose Us?",
       subtitle: "Features that make us the best choice for traders",
@@ -365,442 +428,7 @@ function LanguageProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// ============================================
-// ADMIN AUTHENTICATION CONTEXT
-// ============================================
-
-interface AdminUser {
-  id: string;
-  name: string;
-  email: string;
-  role: "admin" | "user";
-  profileImage: string | null;
-}
-
-interface AdminContextType {
-  isAdmin: boolean;
-  adminUser: AdminUser | null;
-  login: (email: string, password: string) => boolean;
-  logout: () => void;
-  updateProfileImage: (image: string) => void;
-}
-
-const AdminContext = createContext<AdminContextType | undefined>(undefined);
-
-function useAdmin() {
-  const context = useContext(AdminContext);
-  if (!context) {
-    throw new Error("useAdmin must be used within an AdminProvider");
-  }
-  return context;
-}
-
-function AdminProvider({ children }: { children: ReactNode }) {
-  // Use lazy initialization for localStorage to avoid SSR issues
-  const [adminUser, setAdminUser] = useState<AdminUser | null>(() => {
-    if (typeof window === 'undefined') return null;
-    const storedAdmin = localStorage.getItem("adminUser");
-    if (storedAdmin) {
-      try {
-        return JSON.parse(storedAdmin);
-      } catch {
-        localStorage.removeItem("adminUser");
-        return null;
-      }
-    }
-    return null;
-  });
-
-  const login = (email: string, password: string): boolean => {
-    // Mock authentication - In production, this would call an API
-    if (email === "admin@infinitysignals.net" && password === "admin123") {
-      const user: AdminUser = {
-        id: "1",
-        name: "Admin User",
-        email: email,
-        role: "admin",
-        profileImage: null,
-      };
-      setAdminUser(user);
-      localStorage.setItem("adminUser", JSON.stringify(user));
-      return true;
-    }
-    return false;
-  };
-
-  const logout = () => {
-    setAdminUser(null);
-    localStorage.removeItem("adminUser");
-  };
-
-  const updateProfileImage = (image: string) => {
-    if (adminUser) {
-      const updatedUser = { ...adminUser, profileImage: image };
-      setAdminUser(updatedUser);
-      localStorage.setItem("adminUser", JSON.stringify(updatedUser));
-    }
-  };
-
-  return (
-    <AdminContext.Provider
-      value={{
-        isAdmin: adminUser?.role === "admin",
-        adminUser,
-        login,
-        logout,
-        updateProfileImage,
-      }}
-    >
-      {children}
-    </AdminContext.Provider>
-  );
-}
-
-// ============================================
-// ADMIN LOGIN MODAL COMPONENT
-// ============================================
-
-function AdminLoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const { t, isRTL } = useLanguage();
-  const { login } = useAdmin();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    const success = login(email, password);
-    if (success) {
-      onClose();
-    } else {
-      setError(isRTL ? "بيانات الدخول غير صحيحة" : "Invalid credentials");
-    }
-    setIsLoading(false);
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <Card className="w-full max-w-md border-0 shadow-2xl bg-white dark:bg-gray-800 animate-scale-in">
-        <CardHeader className="relative">
-          <button
-            onClick={onClose}
-            className={`absolute top-4 ${isRTL ? "left-4" : "right-4"} text-gray-400 hover:text-gray-600 transition-colors`}
-            aria-label="Close"
-          >
-            <X className="w-5 h-5" />
-          </button>
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full gradient-primary flex items-center justify-center">
-              <Lock className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <CardTitle className="text-xl">
-                {isRTL ? "تسجيل دخول المشرف" : "Admin Login"}
-              </CardTitle>
-              <CardDescription>
-                {isRTL ? "أدخل بيانات الاعتماد للمتابعة" : "Enter credentials to continue"}
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${isRTL ? "text-right" : "text-left"}`}>
-                {isRTL ? "البريد الإلكتروني" : "Email"}
-              </label>
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@infinitysignals.net"
-                className="h-12"
-                required
-              />
-            </div>
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${isRTL ? "text-right" : "text-left"}`}>
-                {isRTL ? "كلمة المرور" : "Password"}
-              </label>
-              <Input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="h-12"
-                required
-              />
-            </div>
-            {error && (
-              <p className="text-red-500 text-sm text-center">{error}</p>
-            )}
-            <Button
-              type="submit"
-              className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <span className="flex items-center gap-2">
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  {isRTL ? "جاري التحقق..." : "Verifying..."}
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <LogIn className="w-4 h-4" />
-                  {isRTL ? "دخول" : "Sign In"}
-                </span>
-              )}
-            </Button>
-            <p className="text-xs text-gray-500 text-center">
-              {isRTL ? "للتجربة: admin@infinitysignals.net / admin123" : "Demo: admin@infinitysignals.net / admin123"}
-            </p>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-// ============================================
-// ADMIN PROFILE PICTURE SECTION
-// ============================================
-
-function AdminProfileSection() {
-  const { t, isRTL, language } = useLanguage();
-  const { isAdmin, adminUser, logout, updateProfileImage } = useAdmin();
-  const [isHovered, setIsHovered] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        updateProfileImage(result);
-        setIsEditing(false);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const triggerFileInput = () => {
-    fileInputRef.current?.click();
-  };
-
-  // If not admin, show login button (hidden for regular users)
-  if (!isAdmin) {
-    return (
-      <section className="py-16 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 relative overflow-hidden">
-        {/* Background decoration */}
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.1),transparent_50%)]" />
-        </div>
-        
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-700/50 mb-6 border border-gray-600/50">
-              <Lock className="w-8 h-8 text-gray-400" />
-            </div>
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-300 mb-4">
-              {isRTL ? "منطقة المشرفين" : "Admin Area"}
-            </h2>
-            <p className="text-gray-500 mb-8 max-w-md mx-auto">
-              {isRTL 
-                ? "هذه المنطقة مخصصة للمشرفين فقط. قم بتسجيل الدخول للوصول إلى لوحة التحكم."
-                : "This area is restricted to administrators only. Sign in to access the control panel."}
-            </p>
-            <Button
-              onClick={() => setShowLoginModal(true)}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-6 text-lg rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-            >
-              <LogIn className={`w-5 h-5 ${isRTL ? "ml-2" : "mr-2"}`} />
-              {isRTL ? "تسجيل دخول المشرف" : "Admin Sign In"}
-            </Button>
-          </div>
-        </div>
-
-        <AdminLoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
-      </section>
-    );
-  }
-
-  // Admin is logged in - show profile section
-  return (
-    <section className="py-16 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute inset-0 opacity-20">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.15),transparent_50%)]" />
-        <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.03%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')]" />
-      </div>
-
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* Section Header */}
-        <div className="text-center mb-10">
-          <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0 px-4 py-1 mb-4">
-            <Shield className="w-3 h-3 mr-1" />
-            {isRTL ? "لوحة المشرف" : "Admin Panel"}
-          </Badge>
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
-            {isRTL ? "الملف الشخصي للمشرف" : "Admin Profile"}
-          </h2>
-          <p className="text-gray-400 max-w-lg mx-auto">
-            {isRTL 
-              ? "إدارة صورة الملف الشخصية وإعدادات الحساب"
-              : "Manage your profile picture and account settings"}
-          </p>
-        </div>
-
-        {/* Profile Card */}
-        <Card className="bg-gray-800/50 border border-gray-700/50 backdrop-blur-xl shadow-2xl overflow-hidden">
-          <CardContent className="p-6 md:p-10">
-            <div className="flex flex-col md:flex-row items-center gap-8">
-              {/* Profile Image Container */}
-              <div
-                className="relative group"
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
-              >
-                {/* Animated ring */}
-                <div className="absolute -inset-2 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-full blur-md opacity-0 group-hover:opacity-75 transition-opacity duration-500 animate-pulse-slow" />
-                
-                {/* Main image container */}
-                <div className="relative w-40 h-40 md:w-48 md:h-48 rounded-full overflow-hidden border-4 border-gray-700 bg-gray-900 transition-all duration-300 group-hover:border-purple-500">
-                  {adminUser?.profileImage ? (
-                    <Image
-                      src={adminUser.profileImage}
-                      alt="Admin Profile"
-                      fill
-                      className="object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
-                      <User className="w-20 h-20 text-gray-600" />
-                    </div>
-                  )}
-                  
-                  {/* Hover overlay */}
-                  <div 
-                    className={`absolute inset-0 bg-black/60 flex items-center justify-center transition-opacity duration-300 cursor-pointer ${
-                      isHovered ? "opacity-100" : "opacity-0"
-                    }`}
-                    onClick={triggerFileInput}
-                  >
-                    <div className="text-center text-white">
-                      <Camera className="w-8 h-8 mx-auto mb-2" />
-                      <span className="text-sm font-medium">
-                        {isRTL ? "تغيير الصورة" : "Change Photo"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Edit button */}
-                <button
-                  onClick={triggerFileInput}
-                  className={`absolute bottom-2 ${isRTL ? "left-2" : "right-2"} w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center shadow-lg transform transition-all duration-300 hover:scale-110 hover:shadow-xl ${
-                    isHovered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
-                  }`}
-                  aria-label={isRTL ? "تحميل صورة" : "Upload photo"}
-                >
-                  <Camera className="w-5 h-5 text-white" />
-                </button>
-
-                {/* Hidden file input */}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                  aria-label="Upload profile image"
-                />
-              </div>
-
-              {/* Profile Info */}
-              <div className="flex-1 text-center md:text-left">
-                <div className="flex flex-col md:flex-row md:items-center gap-3 mb-4">
-                  <h3 className="text-2xl font-bold text-white">
-                    {adminUser?.name || (isRTL ? "المشرف" : "Administrator")}
-                  </h3>
-                  <Badge className="bg-green-500/20 text-green-400 border border-green-500/30 w-fit mx-auto md:mx-0">
-                    <Shield className="w-3 h-3 mr-1" />
-                    {isRTL ? "مشرف نشط" : "Active Admin"}
-                  </Badge>
-                </div>
-                
-                <div className="space-y-2 text-gray-400 mb-6">
-                  <p className="flex items-center gap-2 justify-center md:justify-start">
-                    <Mail className="w-4 h-4" />
-                    {adminUser?.email}
-                  </p>
-                  <p className="flex items-center gap-2 justify-center md:justify-start">
-                    <User className="w-4 h-4" />
-                    {isRTL ? "صلاحيات كاملة" : "Full Permissions"}
-                  </p>
-                </div>
-
-                {/* Action buttons */}
-                <div className={`flex flex-col sm:flex-row gap-3 ${isRTL ? "sm:flex-row-reverse" : ""}`}>
-                  <Button
-                    onClick={triggerFileInput}
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-                  >
-                    <Edit3 className={`w-4 h-4 ${isRTL ? "ml-2" : "mr-2"}`} />
-                    {isRTL ? "تعديل الصورة" : "Edit Photo"}
-                  </Button>
-                  <Button
-                    onClick={logout}
-                    variant="outline"
-                    className="border-red-500/50 text-red-400 hover:bg-red-500/10 hover:border-red-500 transition-all duration-300"
-                  >
-                    <LogOut className={`w-4 h-4 ${isRTL ? "ml-2" : "mr-2"}`} />
-                    {isRTL ? "تسجيل الخروج" : "Sign Out"}
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            {/* Stats row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-10 pt-8 border-t border-gray-700/50">
-              {[
-                { label: isRTL ? "المنتجات" : "Products", value: "24" },
-                { label: isRTL ? "المستخدمين" : "Users", value: "1,234" },
-                { label: isRTL ? "الطلبات" : "Orders", value: "567" },
-                { label: isRTL ? "الإيرادات" : "Revenue", value: "$12K" },
-              ].map((stat, index) => (
-                <div
-                  key={index}
-                  className="text-center p-4 rounded-xl bg-gray-700/20 hover:bg-gray-700/40 transition-colors duration-300"
-                >
-                  <p className="text-2xl font-bold text-white">{stat.value}</p>
-                  <p className="text-sm text-gray-400">{stat.label}</p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <AdminLoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
-    </section>
-  );
-}
-
-// ============================================
-// HEADER COMPONENT (Updated with Admin Toggle)
-// ============================================
+// Header Component
 function Header() {
   const { language, setLanguage, t, isRTL } = useLanguage();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -1055,41 +683,38 @@ function ServicesSection() {
             return (
               <Card
                 key={index}
-                className="group relative overflow-hidden border-0 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 bg-white dark:bg-gray-800"
+                className="group border-0 shadow-lg hover:shadow-2xl transition-all duration-500 bg-white dark:bg-gray-800 overflow-hidden"
               >
-                {/* Gradient Border */}
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-yellow-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="relative bg-white dark:bg-gray-800 m-[2px] rounded-lg">
-                  <CardHeader className="pb-4">
-                    <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl gradient-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                      <IconComponent className="w-7 h-7 md:w-8 md:h-8 text-white" />
-                    </div>
-                    <CardTitle className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
-                      {service.title}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription className="text-gray-600 dark:text-gray-400 mb-4 text-base">
-                      {service.description}
-                    </CardDescription>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className={`text-2xl font-bold ${service.price === "Free" || service.price === "مجاني" ? "text-green-600 dark:text-green-400" : "gradient-text"}`}>
-                          {service.price}
-                        </span>
-                        <span className="text-gray-500 text-sm">{service.period}</span>
-                      </div>
-                      <Button
-                        className={`bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full ${
-                          isRTL ? "flex-row-reverse" : ""
-                        }`}
-                      >
-                        {t.services.subscribe}
-                        <ArrowRight className={`w-4 h-4 ${isRTL ? "rotate-180" : ""}`} />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </div>
+                <CardContent className="p-6 md:p-8">
+                  {/* Icon */}
+                  <div className={`w-14 h-14 rounded-xl gradient-primary flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 ${isRTL ? "ml-auto" : "mr-auto"}`}>
+                    <IconComponent className="w-7 h-7 text-white" />
+                  </div>
+
+                  {/* Content */}
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+                    {service.title}
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-4">
+                    {service.description}
+                  </p>
+
+                  {/* Price */}
+                  <div className={`flex items-baseline gap-1 ${isRTL ? "flex-row-reverse" : ""}`}>
+                    <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                      {service.price}
+                    </span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      {service.period}
+                    </span>
+                  </div>
+
+                  {/* Subscribe Button */}
+                  <Button className="w-full mt-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white group-hover:shadow-lg transition-all duration-300">
+                    {t.services.subscribe}
+                    <ChevronRight className={`w-4 h-4 ${isRTL ? "rotate-180" : ""}`} />
+                  </Button>
+                </CardContent>
               </Card>
             );
           })}
@@ -1099,14 +724,244 @@ function ServicesSection() {
   );
 }
 
-// Features Section
-function FeaturesSection() {
-  const { t } = useLanguage();
-
-  const icons = [Award, Zap, Shield, Clock];
+// CEO Section
+function CEOSection() {
+  const { t, isRTL } = useLanguage();
+  const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <section className="py-20 md:py-28 bg-white dark:bg-gray-800">
+    <section id="about" className="py-20 md:py-28 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.15),transparent_50%)]" />
+        <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.03%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')]" />
+      </div>
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        {/* Section Header */}
+        <div className="text-center mb-12">
+          <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 px-4 py-1 mb-4">
+            <Award className="w-3 h-3 mr-1" />
+            {t.ceo.subtitle}
+          </Badge>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
+            {t.ceo.title}
+          </h2>
+        </div>
+
+        {/* CEO Card */}
+        <div
+          className="relative group"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          {/* Animated gradient border */}
+          <div className={`absolute -inset-1 bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 rounded-3xl blur-sm transition-opacity duration-500 ${isHovered ? "opacity-100" : "opacity-50"}`} />
+          
+          <Card className="relative bg-gray-800/80 backdrop-blur-xl border-0 rounded-3xl overflow-hidden">
+            <CardContent className="p-0">
+              <div className="flex flex-col lg:flex-row">
+                {/* Image Side */}
+                <div className="lg:w-2/5 relative">
+                  <div className="aspect-square lg:aspect-auto lg:h-full relative overflow-hidden">
+                    {/* Gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent z-10 lg:bg-gradient-to-r" />
+                    
+                    <Image
+                      src="/team/ceo.png"
+                      alt={t.ceo.name}
+                      fill
+                      className={`object-cover transition-transform duration-700 ${isHovered ? "scale-105" : "scale-100"}`}
+                    />
+                    
+                    {/* Floating badge */}
+                    <div className="absolute bottom-4 left-4 right-4 z-20 lg:hidden">
+                      <Badge className="bg-yellow-500/90 text-gray-900 border-0 px-3 py-1">
+                        <Award className="w-3 h-3 mr-1" />
+                        {t.ceo.role}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Info Side */}
+                <div className="lg:w-3/5 p-6 md:p-8 lg:p-12 flex flex-col justify-center">
+                  {/* Badge - Desktop */}
+                  <div className="hidden lg:block mb-6">
+                    <Badge className="bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 px-4 py-1">
+                      <Award className="w-4 h-4 mr-2" />
+                      {t.ceo.role}
+                    </Badge>
+                  </div>
+
+                  {/* Name */}
+                  <h3 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                    {t.ceo.name}
+                  </h3>
+
+                  {/* Description */}
+                  <p className="text-lg text-gray-300 mb-8 leading-relaxed">
+                    {t.ceo.description}
+                  </p>
+
+                  {/* Stats */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-gray-700/30 rounded-xl p-4 text-center">
+                      <p className="text-2xl md:text-3xl font-bold text-yellow-400">15+</p>
+                      <p className="text-sm text-gray-400">{t.ceo.experience.replace("+15 ", "")}</p>
+                    </div>
+                    <div className="bg-gray-700/30 rounded-xl p-4 text-center">
+                      <p className="text-2xl md:text-3xl font-bold text-yellow-400">2018</p>
+                      <p className="text-sm text-gray-400">{t.ceo.founded.replace("تأسست ", "").replace("Founded ", "")}</p>
+                    </div>
+                  </div>
+
+                  {/* Social Links */}
+                  <div className={`flex gap-3 mt-8 ${isRTL ? "justify-end" : "justify-start"}`}>
+                    <a
+                      href="#"
+                      className="w-10 h-10 rounded-full bg-gray-700/50 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 flex items-center justify-center transition-all duration-300"
+                      aria-label="LinkedIn"
+                    >
+                      <Linkedin className="w-5 h-5 text-white" />
+                    </a>
+                    <a
+                      href="#"
+                      className="w-10 h-10 rounded-full bg-gray-700/50 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 flex items-center justify-center transition-all duration-300"
+                      aria-label="Twitter"
+                    >
+                      <Twitter className="w-5 h-5 text-white" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// Team Section
+function TeamSection() {
+  const { t, isRTL } = useLanguage();
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  const teamImages = [
+    "/team/jeremy.png",
+    "/team/ryan.png",
+    "/team/milano.png",
+    "/team/samiha.png",
+  ];
+
+  return (
+    <section className="py-20 md:py-28 bg-gradient-to-b from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Section Header */}
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold gradient-text mb-4">
+            {t.team.title}
+          </h2>
+          <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+            {t.team.subtitle}
+          </p>
+        </div>
+
+        {/* Team Grid - 2x2 on desktop, 1 column on mobile */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-4xl mx-auto">
+          {t.team.members.map((member, index) => (
+            <div
+              key={index}
+              className="group relative"
+              onMouseEnter={() => setHoveredIndex(index)}
+              onMouseLeave={() => setHoveredIndex(null)}
+            >
+              {/* Animated gradient border */}
+              <div
+                className={`absolute -inset-0.5 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl blur-sm transition-opacity duration-500 ${
+                  hoveredIndex === index ? "opacity-100" : "opacity-0"
+                }`}
+              />
+
+              <Card className="relative bg-white dark:bg-gray-800 border-0 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300">
+                <CardContent className="p-6">
+                  <div className="flex flex-col sm:flex-row items-center gap-6">
+                    {/* Circular Image with gradient border */}
+                    <div className="relative shrink-0">
+                      {/* Gradient ring */}
+                      <div
+                        className={`absolute -inset-1 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-full transition-all duration-300 ${
+                          hoveredIndex === index ? "opacity-100 blur-sm" : "opacity-50"
+                        }`}
+                      />
+                      
+                      <div className="relative w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden border-4 border-white dark:border-gray-800">
+                        <Image
+                          src={teamImages[index]}
+                          alt={member.name}
+                          fill
+                          className={`object-cover transition-transform duration-500 ${
+                            hoveredIndex === index ? "scale-110" : "scale-100"
+                          }`}
+                        />
+                      </div>
+
+                      {/* Glow effect on hover */}
+                      {hoveredIndex === index && (
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20 animate-pulse" />
+                      )}
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex-1 text-center sm:text-left">
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+                        {member.name}
+                      </h3>
+                      <p className="text-blue-600 dark:text-blue-400 font-medium mb-3">
+                        {member.role}
+                      </p>
+                      <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
+                        {member.description}
+                      </p>
+
+                      {/* Social Icons */}
+                      <div className={`flex gap-2 mt-4 ${isRTL ? "sm:justify-end" : "sm:justify-start"} justify-center`}>
+                        <a
+                          href="#"
+                          className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 flex items-center justify-center transition-all duration-300 group/icon"
+                          aria-label="LinkedIn"
+                        >
+                          <Linkedin className="w-4 h-4 text-gray-600 dark:text-gray-300 group-hover/icon:text-white transition-colors" />
+                        </a>
+                        <a
+                          href="#"
+                          className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 flex items-center justify-center transition-all duration-300 group/icon"
+                          aria-label="Twitter"
+                        >
+                          <Twitter className="w-4 h-4 text-gray-600 dark:text-gray-300 group-hover/icon:text-white transition-colors" />
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// Features Section
+function FeaturesSection() {
+  const { t, isRTL } = useLanguage();
+
+  const icons = [Zap, Clock, Shield, Headphones];
+
+  return (
+    <section className="py-20 md:py-28 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-16">
@@ -1119,21 +974,28 @@ function FeaturesSection() {
         </div>
 
         {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
           {t.features.items.map((feature, index) => {
             const IconComponent = icons[index];
             return (
               <div
                 key={index}
-                className="text-center group p-6 rounded-2xl hover:bg-gradient-to-b hover:from-blue-50 hover:to-purple-50 dark:hover:from-gray-700 dark:hover:to-gray-700 transition-all duration-300"
+                className="group text-center p-6 md:p-8 rounded-2xl bg-white dark:bg-gray-800 shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 dark:border-gray-700 hover:border-blue-500/50"
               >
-                <div className="w-16 h-16 md:w-20 md:h-20 mx-auto rounded-full gradient-primary flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                  <IconComponent className="w-8 h-8 md:w-10 md:h-10 text-white" />
+                {/* Icon */}
+                <div className="w-16 h-16 mx-auto mb-6 rounded-2xl gradient-primary flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <IconComponent className="w-8 h-8 text-white" />
                 </div>
+
+                {/* Title */}
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
                   {feature.title}
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400">{feature.description}</p>
+
+                {/* Description */}
+                <p className="text-gray-600 dark:text-gray-400">
+                  {feature.description}
+                </p>
               </div>
             );
           })}
@@ -1148,76 +1010,71 @@ function ExternalLinksSection() {
   const { t, isRTL } = useLanguage();
 
   return (
-    <section className="py-20 md:py-28 bg-gradient-to-br from-blue-600 via-purple-600 to-blue-800 relative overflow-hidden">
+    <section className="py-20 md:py-28 bg-gradient-to-br from-blue-900 via-purple-900 to-blue-900 relative overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-        }}></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.1),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(255,255,255,0.1),transparent_50%)]" />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
             {t.links.title}
           </h2>
-          <p className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-white/70 max-w-2xl mx-auto">
             {t.links.subtitle}
           </p>
         </div>
 
-        {/* Links Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Links Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
           {/* Infinity Signals Card */}
-          <a
-            href="https://infinitysignals.net/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group glassmorphism rounded-2xl p-6 md:p-8 hover:scale-105 transition-all duration-300 cursor-pointer block"
-          >
-            <div className="flex items-start gap-4">
-              <div className="w-14 h-14 rounded-xl bg-yellow-500 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
-                <TrendingUp className="w-7 h-7 text-white" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-xl md:text-2xl font-bold text-white mb-2 flex items-center gap-2">
-                  {t.links.infinitySignals.title}
-                  <ExternalLink className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </h3>
-                <p className="text-white/80 mb-4">{t.links.infinitySignals.description}</p>
-                <div className={`inline-flex items-center gap-2 text-yellow-300 font-semibold ${isRTL ? "flex-row-reverse" : ""}`}>
-                  {t.links.visit}
-                  <ArrowRight className={`w-4 h-4 group-hover:translate-x-1 transition-transform ${isRTL ? "rotate-180" : ""}`} />
+          <Card className="group border-0 shadow-2xl bg-white/10 backdrop-blur-xl hover:bg-white/20 transition-all duration-500 overflow-hidden">
+            <CardContent className="p-6 md:p-8">
+              <div className="flex items-start gap-4">
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
+                  <TrendingUp className="w-7 h-7 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-white mb-2">
+                    {t.links.infinitySignals.title}
+                  </h3>
+                  <p className="text-white/70 mb-4">
+                    {t.links.infinitySignals.description}
+                  </p>
+                  <Button className="bg-white/20 hover:bg-white/30 text-white border border-white/30">
+                    {t.links.visit}
+                    <ExternalLink className={`w-4 h-4 ${isRTL ? "mr-2" : "ml-2"}`} />
+                  </Button>
                 </div>
               </div>
-            </div>
-          </a>
+            </CardContent>
+          </Card>
 
-          {/* Algo Academy Card */}
-          <a
-            href="https://infinityalgoacademy.net/portal/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group glassmorphism rounded-2xl p-6 md:p-8 hover:scale-105 transition-all duration-300 cursor-pointer block"
-          >
-            <div className="flex items-start gap-4">
-              <div className="w-14 h-14 rounded-xl bg-green-500 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
-                <GraduationCap className="w-7 h-7 text-white" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-xl md:text-2xl font-bold text-white mb-2 flex items-center gap-2">
-                  {t.links.algoAcademy.title}
-                  <ExternalLink className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </h3>
-                <p className="text-white/80 mb-4">{t.links.algoAcademy.description}</p>
-                <div className={`inline-flex items-center gap-2 text-yellow-300 font-semibold ${isRTL ? "flex-row-reverse" : ""}`}>
-                  {t.links.visit}
-                  <ArrowRight className={`w-4 h-4 group-hover:translate-x-1 transition-transform ${isRTL ? "rotate-180" : ""}`} />
+          {/* Infinity Academy Card */}
+          <Card className="group border-0 shadow-2xl bg-white/10 backdrop-blur-xl hover:bg-white/20 transition-all duration-500 overflow-hidden">
+            <CardContent className="p-6 md:p-8">
+              <div className="flex items-start gap-4">
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-r from-green-500 to-teal-500 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
+                  <GraduationCap className="w-7 h-7 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-white mb-2">
+                    {t.links.algoAcademy.title}
+                  </h3>
+                  <p className="text-white/70 mb-4">
+                    {t.links.algoAcademy.description}
+                  </p>
+                  <Button className="bg-white/20 hover:bg-white/30 text-white border border-white/30">
+                    {t.links.visit}
+                    <ExternalLink className={`w-4 h-4 ${isRTL ? "mr-2" : "ml-2"}`} />
+                  </Button>
                 </div>
               </div>
-            </div>
-          </a>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </section>
@@ -1229,7 +1086,7 @@ function TestimonialsSection() {
   const { t, isRTL } = useLanguage();
 
   return (
-    <section id="about" className="py-20 md:py-28 bg-gradient-to-b from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
+    <section className="py-20 md:py-28 bg-gradient-to-b from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-16">
@@ -1242,45 +1099,42 @@ function TestimonialsSection() {
         </div>
 
         {/* Testimonials Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
           {t.testimonials.items.map((testimonial, index) => (
             <Card
               key={index}
-              className="group relative overflow-hidden border-0 shadow-lg hover:shadow-2xl transition-all duration-500 bg-white dark:bg-gray-800"
+              className="border-0 shadow-lg hover:shadow-2xl transition-all duration-500 bg-white dark:bg-gray-800"
             >
               <CardContent className="p-6 md:p-8">
-                {/* Rating Stars */}
+                {/* Rating */}
                 <div className={`flex gap-1 mb-4 ${isRTL ? "flex-row-reverse" : ""}`}>
                   {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+                    <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                   ))}
                 </div>
 
                 {/* Content */}
-                <p className="text-gray-600 dark:text-gray-300 mb-6 text-lg leading-relaxed">
+                <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
                   &quot;{testimonial.content}&quot;
                 </p>
 
                 {/* Author */}
-                <div className={`flex items-center gap-4 ${isRTL ? "flex-row-reverse" : ""}`}>
-                  <div className="w-12 h-12 rounded-full gradient-primary flex items-center justify-center text-white font-bold text-lg">
-                    {testimonial.name.charAt(0)}
+                <div className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}>
+                  <div className="w-12 h-12 rounded-full gradient-primary flex items-center justify-center">
+                    <span className="text-white font-bold text-lg">
+                      {testimonial.name.charAt(0)}
+                    </span>
                   </div>
-                  <div className={isRTL ? "text-right" : "text-left"}>
-                    <div className="font-bold text-gray-900 dark:text-white">
+                  <div>
+                    <p className="font-bold text-gray-900 dark:text-white">
                       {testimonial.name}
-                    </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
                       {testimonial.role}
-                    </div>
+                    </p>
                   </div>
                 </div>
               </CardContent>
-
-              {/* Quote decoration */}
-              <div className={`absolute -bottom-4 text-8xl text-gray-100 dark:text-gray-700 font-serif ${isRTL ? "left-4" : "right-4"}`}>
-                &ldquo;
-              </div>
             </Card>
           ))}
         </div>
@@ -1463,21 +1317,20 @@ function Footer() {
 export default function Home() {
   return (
     <LanguageProvider>
-      <AdminProvider>
-        <div className="min-h-screen bg-white dark:bg-gray-900">
-          <Header />
-          <main>
-            <HeroSection />
-            <AdminProfileSection />
-            <ServicesSection />
-            <FeaturesSection />
-            <ExternalLinksSection />
-            <TestimonialsSection />
-            <ContactSection />
-          </main>
-          <Footer />
-        </div>
-      </AdminProvider>
+      <div className="min-h-screen bg-white dark:bg-gray-900">
+        <Header />
+        <main>
+          <HeroSection />
+          <ServicesSection />
+          <CEOSection />
+          <TeamSection />
+          <FeaturesSection />
+          <ExternalLinksSection />
+          <TestimonialsSection />
+          <ContactSection />
+        </main>
+        <Footer />
+      </div>
     </LanguageProvider>
   );
 }
