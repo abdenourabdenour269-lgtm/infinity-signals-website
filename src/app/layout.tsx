@@ -1,37 +1,41 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Cairo, Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const cairo = Cairo({
+  variable: "--font-cairo",
+  subsets: ["arabic", "latin"],
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Z.ai Code Scaffold - AI-Powered Development",
-  description: "Modern Next.js scaffold optimized for AI-powered development with Z.ai. Built with TypeScript, Tailwind CSS, and shadcn/ui.",
-  keywords: ["Z.ai", "Next.js", "TypeScript", "Tailwind CSS", "shadcn/ui", "AI development", "React"],
-  authors: [{ name: "Z.ai Team" }],
+  title: "Infinity Algo Power | إنفينيتي ألجو باور - إشارات تداول احترافية",
+  description: "Infinity Algo Power - Professional trading signals, market analysis, and algorithmic trading solutions. إنفينيتي ألجو باور - إشارات تداول احترافية وحلول التداول الخوارزمي",
+  keywords: ["Infinity Algo Power", "إنفينيتي ألجو باور", "Trading Signals", "إشارات تداول", "Algorithmic Trading", "التداول الخوارزمي", "Market Analysis", "تحليل السوق", "Forex", "Crypto", "Stocks"],
+  authors: [{ name: "Infinity Algo Power Team" }],
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: "/logo.png",
   },
   openGraph: {
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
-    url: "https://chat.z.ai",
-    siteName: "Z.ai",
+    title: "Infinity Algo Power - Professional Trading Signals",
+    description: "Professional trading signals, market analysis, and algorithmic trading solutions.",
+    url: "https://infinityalgopower.com",
+    siteName: "Infinity Algo Power",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
+    title: "Infinity Algo Power",
+    description: "Professional trading signals and algorithmic trading solutions",
   },
 };
 
@@ -43,7 +47,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
+        className={`${cairo.variable} ${inter.variable} antialiased`}
       >
         {children}
         <Toaster />
